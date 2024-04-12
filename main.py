@@ -1,5 +1,6 @@
 import cv2  # For image manipulation
 import dlib  # For face detection
+import mysql.connector
 from playsound import playsound  # For wav sound
 from scipy.spatial import distance
 from datetime import datetime  # For time
@@ -15,6 +16,13 @@ predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 EYE_EAR_THRESHOLD = 0.25
 EYE_EAR_CONSEC_FRAMES = 20
 
+my_data_base = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="drowsiness"
+    )
+cursor = my_data_base.cursor()
 
 # This function to calculate the distance between landmarks on the opposite sides of the eyes.
 def eye_aspect_ratio(eye):
@@ -27,6 +35,13 @@ def eye_aspect_ratio(eye):
     EAR = (dis1 + dis2) / (2.0 * dis3)
     # print(EAR) || Ex. 0.3892341510100462
     return EAR
+
+
+def convert_image_to_binary(image):
+    with open(image, 'rb') as file:     # rb = read as binary
+        binary_data = file.read()
+    return binary_data
+
 
 # Start webcam
 cap = cv2.VideoCapture(0)  # 0 To start witxh first webcam
@@ -77,6 +92,11 @@ while True:
                     Thread(target=playsound, args=(alarm_path,)).start()  # To run a thread for alarm
                     # playsound(alarm_path)
                     print("Drowsiness detected!")
+
+                    pic=convert_image_to_binary(image)
+                    cursor.execute("INSERT INTO detection VALUES (%s, %s, %s, %s)", ('1', '100', pic, timestamp))
+                    my_data_base.commit()
+
                     print(count)
 
                 # cv2.putText(frame, "WARNING!", (20, 50), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 0), 1)
