@@ -95,6 +95,7 @@ while True:
 
                     pic=convert_image_to_binary(image)
                     cursor.execute("INSERT INTO detection VALUES (%s, %s, %s, %s)", ('1', '100', pic, timestamp))
+                    cursor.execute("INSERT INTO report VALUES (1, 1)")
                     my_data_base.commit()
 
                     print(count)
