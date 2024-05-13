@@ -1,7 +1,7 @@
 import sys
 import cv2  # For image manipulation
 import dlib  # For face detection
-import mysql.connector
+import mysql.connector  # For Database Connection
 import face_recognition
 from playsound import playsound  # For wav sound
 from scipy.spatial import distance
@@ -13,13 +13,13 @@ ID = 0
 
 class VideoStream:
 
-    def __init__(self):
+    def __init__(self):     # Turki
         self.cap = cv2.VideoCapture(0)
 
-    def stop(self):
+    def stop(self):     # Turki
         self.cap.release()
 
-    def read_frame(self):
+    def read_frame(self):   # Turki
         ret, frame = self.cap.read()
         return ret, frame
 
@@ -34,7 +34,7 @@ class Database:
         database="drowsiness"
     )
 
-    # This function will create a cursor || Turki
+    # This function will create a cursor || Saad
     def database_connection(self):
         try:
             cursor = self.my_data_base.cursor()
@@ -42,7 +42,7 @@ class Database:
         except Exception as e:
             print("Error in Database: ", e)
 
-    # This function will convert image to binary to stored in Database  || Turki
+    # This function will convert image to binary to stored in Database  || Saad
     def convert_image_to_binary(self, image):
         try:
             with open(image, 'rb') as file:  # rb = read as binary
@@ -51,7 +51,7 @@ class Database:
         except Exception as e:
             print("Error in convert image to binary: ", e)
 
-    def insert_to_database(self, cursor, image, timestamp):
+    def insert_to_database(self, cursor, image, timestamp):     # Saad
 
         # Insert the detection to Database
         pic = self.convert_image_to_binary(image)
@@ -68,10 +68,7 @@ class FaceRecognition:
         'Amer.jpg': 'Amer'
     }
 
-    # Resource1: https://www.analyticsvidhya.com/blog/2022/04/face-recognition-system-using-python/
-    # Resource2: https://github.com/ageitgey/face_recognition
-    # Turki & Amer
-    def knowing_driver(self):
+    def knowing_driver(self):   # Amer
         # This is list
         encoding = []
         names = []
@@ -84,7 +81,7 @@ class FaceRecognition:
             names.append(name)
         return encoding, names
 
-    def encodingFace(self, gray, face_encodings, face_names):
+    def encodingFace(self, gray, face_encodings, face_names):   # Amer
 
         # Convert image into encoding
         location = face_recognition.face_locations(gray)
@@ -112,22 +109,10 @@ class FaceRecognition:
             playsound("Sounds/no_name.wav")
             sys.exit()
 
-
-        for face in location:
-            x1 = face.left()
-            x2 = face.right()
-            y1 = face.top()
-            y2 = face.bottom()
-
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-        cv2.imshow('Video', frame)
-
-
 # ----------------------------------------------------------------------------------------------------------------------
-
 class Drowsiness:
 
-    def __init__(self):
+    def __init__(self):     # Turki
         # We will use Dlib’s pre-trained face detector for this task.
         self.detector = dlib.get_frontal_face_detector()
         # 2. الدخول إلى الكاميرا ووضع علامة على المعالم من ملف (.dat) للتنبؤ بموقع الأذن والعينين.
@@ -135,14 +120,14 @@ class Drowsiness:
         self.alarm_path = "Sounds/alarm.wav"
 
         # For drowsiness detection
-        self.EYE_EAR_THRESHOLD = 0.30
-        self.EYE_EAR_CONSEC_FRAMES = 20
+        self.EYE_EAR_THRESHOLD = 0.25
+        self.EYE_EAR_CONSEC_FRAMES = 25
         self.count = 0
         self.alarm_statu = False
 
     # This function to calculate the distance between landmarks on the opposite sides of the eyes. || Turki
     @staticmethod
-    def eye_aspect_ratio(eye):
+    def eye_aspect_ratio(eye):  # Turki
         try:
             dis1 = distance.euclidean(eye[1], eye[5])
             # print(dis1) Ex. (9.0 - 11.0)
@@ -156,12 +141,12 @@ class Drowsiness:
         except Exception as e:
             print("Error in EAR method: ", e)
 
-    def landmarks(self, gray, frame):
+    def landmarks(self, gray, frame):   # Turki
 
         # Will return a list of rectangles representing the detected faces.
         faces = self.detector(gray)
 
-        # Draw a rectangles around the image.
+        # Draw a rectangles around the image.x
         for face in faces:
             x1 = face.left()
             x2 = face.right()
@@ -182,7 +167,7 @@ class Drowsiness:
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def main():  # Turki & Amer
+def main():  # Turki & Amer & Saad
 
     db = Database()
     fr = FaceRecognition()
@@ -196,9 +181,9 @@ def main():  # Turki & Amer
     # Part1: Recognition the driver face.
     face_encodings, face_names = fr.knowing_driver()
 
-
     while True:
         try:
+            # boolean, ndarray
             ret, frame = vs1.read_frame()
             if not ret:
                 break
@@ -249,13 +234,11 @@ def main():  # Turki & Amer
                         cv2.imwrite(image, frame)
                         Thread(target=playsound, args=(dr.alarm_path,)).start()  # To run a thread for alarm
                         print("Drowsiness detected!")
-                        print(dr.count)
                         db2.insert_to_database(cursor, image, timestamp)
 
             else:
                 dr.count = 0
                 dr.alarm_statu = False
-
 
             cv2.putText(frame, f"EAR: {ear:.2f}", (20, 20),
                         cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 0), 1)
